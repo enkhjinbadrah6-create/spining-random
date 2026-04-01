@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malchin TV - Phone Number Generator</title>
+  <style>
+    :root {
+      --bg-dark: #244d9a;
+      --bg-mid: #4f83d9;
+      --bg-light: #edf6ff;
+      --panel: rgba(255,255,255,0.18);
+      --panel-border: rgba(255,255,255,0.24);
+      --text: #ffffff;
+      --pointer: #ffcf33;
+      --pointer-edge: #c88a00;
+      --highlight-fill: rgba(255, 224, 102, 0.55);
+      --highlight-stroke: rgba(255, 191, 0, 0.95);
+      --highlight-glow: rgba(255, 214, 64, 0.75);
+    }
+
+
+    * { box-sizing: border-box; }
+
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 14% 14%, rgba(255,255,255,0.42), transparent 24%),
+        radial-gradient(circle at 82% 10%, rgba(200,225,255,0.28), transparent 22%),
+        linear-gradient(120deg, #1f3f82 0%, #4e7fd3 48%, #79a7ea 72%, #edf6ff 100%);
+      color: var(--text);
+    }
+
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr;
+      gap: 28px;
+      padding: 24px 28px;
+    }
+
+
+    .left {
+      display: grid;
+      grid-template-rows: 130px 1fr;
+      gap: 18px;
+      min-width: 0;
+    }
+
+
+    .logo-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: 26px;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255,255,255,0.18) 0%,
+          rgba(255,255,255,0.08) 35%,
+          rgba(255,255,255,0.03) 100%
+        );
+      border: none;
+      box-shadow: none;
+    }
+
+
+    .logo-bar img {
+      max-width: 80%;
+      max-height: 92px;
+      object-fit: contain;
+      display: block;
+    }
+
+
+    .wheel-stage {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      border-radius: 30px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+
+    .wheel-wrap {
+      position: relative;
+      width: min(72vh, 800px);
+      height: min(72vh, 800px);
+    }
+
+
+    .pointer {
+      position: absolute;
+      right: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 28px solid transparent;
+      border-bottom: 28px solid transparent;
+      border-right: 52px solid var(--pointer);
+      filter:
+        drop-shadow(0 0 10px rgba(255, 210, 70, 0.95))
+        drop-shadow(0 6px 14px rgba(0,0,0,0.30));
+      z-index: 12;
+    }
+
+
+    .pointer::before {
+      content: "";
+      position: absolute;
+      top: -28px;
+      left: 52px;
+      width: 0;
+      height: 0;
+      border-top: 28px solid transparent;
+      border-bottom: 28px solid transparent;
+      border-right: 52px solid var(--pointer-edge);
+      transform: translateX(-100%) scale(1.03);
+      z-index: -1;
+      opacity: 0.95;
+    }
+
+
+    .pointer::after {
+      content: "";
+      position: absolute;
+      top: -14px;
+      left: 34px;
+      width: 0;
+      height: 0;
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+      border-right: 26px solid rgba(255,255,255,0.30);
+      transform: translateX(-100%);
+      opacity: 0.8;
+    }
+
+
+    .wheel {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 8px solid rgba(255,255,255,0.52);
+      box-shadow:
+        0 18px 48px rgba(0,0,0,0.20),
+        inset 0 0 22px rgba(255,255,255,0.16),
+        inset 0 -14px 28px rgba(0,0,0,0.06);
+      transition: transform 5.8s cubic-bezier(0.12, 0.82, 0.14, 1);
+      background: #fff;
+    }
+
+
+    .wheel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.22), transparent 36%);
+    }
+
+
+    .wheel::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 108px;
+      height: 108px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: #f5f8fc;
+      border: 6px solid rgba(255,255,255,0.92);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      z-index: 7;
+    }
+
+
+    .highlight-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+
+    .label-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+
+    .num-label {
+      position: absolute;
+      width: 58px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(34px, 3.3vw, 58px);
+      font-weight: 700;
+      line-height: 1;
+      user-select: none;
+      transform-origin: center center;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.10);
+      color: rgba(20, 26, 42, 0.95);
+    }
+
+
+    .right {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 24px 26px;
+      border-radius: 30px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.12));
+      border: 1px solid rgba(255,255,255,0.24);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 16px 42px rgba(0,0,0,0.14);
+    }
+
+
+    .result-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex-direction: column;
+      gap: 18px;
+      min-width: 0;
+    }
+
+
+   .result-title {
+  font-size: clamp(34px, 2.4vw, 46px);
+  color: rgba(255,255,255,0.92);
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+
+.selected-label {
+  font-size: clamp(30px, 2.1vw, 40px);
+  color: rgba(255,255,255,0.90);
+  font-weight: 800;
+}
+
+
+.selected-number {
+  font-size: clamp(64px, 4.4vw, 92px);
+  font-weight: 900;
+  line-height: 1;
+  min-height: 1em;
+  text-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+
+
+    .phone-number {
+      width: 100%;
+      max-width: 100%;
+      font-size: clamp(52px, 4.6vw, 88px);
+      font-weight: 900;
+      line-height: 1.08;
+      min-height: 1.25em;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.16);
+    }
+
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 8px;
+      min-height: 88px;
+    }
+
+
+    .action-btn {
+      appearance: none;
+      border: none;
+      border-radius: 22px;
+      padding: 20px 44px;
+      min-width: 260px;
+      font-family: monospace;
+      font-size: clamp(24px, 1.7vw, 34px);
+      font-weight: 800;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+    }
+
+
+    .action-btn:hover:not(:disabled) {
+      transform: translateY(-2px) scale(1.01);
+      filter: brightness(1.04);
+    }
+
+
+    .action-btn:active:not(:disabled) { transform: translateY(0); }
+    .action-btn:disabled { opacity: 0.66; cursor: not-allowed; }
+
+
+    .spin-btn {
+      background: linear-gradient(180deg, #83beff 0%, #3f83ff 100%);
+      box-shadow: 0 14px 28px rgba(45,109,246,0.24), inset 0 1px 0 rgba(255,255,255,0.34);
+    }
+
+
+    .restart-btn {
+      font-family: monospace;
+      background: linear-gradient(180deg, #7adf95 0%, #1fb357 100%);
+      box-shadow: 0 14px 28px rgba(31,179,87,0.24), inset 0 1px 0 rgba(255,255,255,0.34);
+    }
+
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0 0 0 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+
+    @media (max-width: 1280px) {
+      html, body { overflow: auto; }
+
+
+      .app {
+        height: auto;
+        min-height: 100vh;
+        grid-template-columns: 1fr;
+      }
+
+
+      .wheel-wrap {
+        width: min(84vw, 760px);
+        height: min(84vw, 760px);
+      }
+
+
+      .right {
+        min-height: 420px;
+      }
+
+
+      .phone-number {
+        font-size: clamp(44px, 9vw, 72px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="left">
+      <div class="logo-bar">
+        <img src="malchintv.png" alt="Malchin TV logo" />
+      </div>
+
+
+      <div class="wheel-stage">
+        <div class="wheel-wrap">
+          <div class="pointer" aria-hidden="true"></div>
+
+
+          <div id="wheel" class="wheel" role="img" aria-label="0-9 хүртэлх тоотой number picker wheel">
+            <div id="highlightLayer" class="highlight-layer"></div>
+            <div id="labelLayer" class="label-layer"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <aside class="right">
+      <div class="result-wrap">
+        <div class="result-title">Утасны дугаар</div>
+        <div id="phoneNumber" class="phone-number">**------</div>
+
+
+        <div class="selected-label">Сонгогдсон тоо</div>
+        <div id="selectedNumber" class="selected-number">-</div>
+
+
+       
+      </div>
+
+
+      <div class="controls">
+        <button id="actionBtn" class="action-btn spin-btn" type="button">SPIN</button>
+      </div>
+    </aside>
+  </div>
+
+
+  <div id="liveRegion" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
+
+  <script>
+    const numbers = [5, 4, 1, 0, 2, 7, 3, 6, 8, 9];
+    const sliceAngle = 360 / numbers.length;
+
+
+    const wheel = document.getElementById('wheel');
+    const highlightLayer = document.getElementById('highlightLayer');
+    const labelLayer = document.getElementById('labelLayer');
+    const actionBtn = document.getElementById('actionBtn');
+    const phoneNumber = document.getElementById('phoneNumber');
+    const selectedNumber = document.getElementById('selectedNumber');
+    const liveRegion = document.getElementById('liveRegion');
+
+
+    let currentRotation = 0;
+    let spinning = false;
+    let selectedDigits = [];
+    let buildComplete = false;
+
+
+    const sliceColors = [
+      '#dbeafe',
+      '#93c5fd',
+      '#60a5fa',
+      '#bfdbfe',
+      '#eaf4ff',
+      '#7db7ff',
+      '#cfe7ff',
+      '#4f83ff',
+      '#d9ecff',
+      '#84bfff'
+    ];
+
+
+    function buildConicGradient() {
+      const parts = numbers.map((_, i) => {
+        const start = i * sliceAngle;
+        const end = start + sliceAngle;
+        return `${sliceColors[i]} ${start}deg ${end}deg`;
+      });
+
+
+      wheel.style.background = `conic-gradient(${parts.join(', ')})`;
+    }
+
+
+    function clearHighlight() {
+      highlightLayer.style.opacity = '0';
+      highlightLayer.style.background = 'none';
+      highlightLayer.style.boxShadow = 'none';
+      highlightLayer.style.filter = 'none';
+    }
+
+
+    function showHighlight(sliceIndex) {
+      const start = sliceIndex * sliceAngle;
+      const end = start + sliceAngle;
+      const borderStart = start + 1.2;
+      const borderEnd = end - 1.2;
+
+
+      highlightLayer.style.background = `
+        conic-gradient(
+          transparent 0deg ${start}deg,
+          var(--highlight-stroke) ${start}deg ${borderStart}deg,
+          var(--highlight-fill) ${borderStart}deg ${borderEnd}deg,
+          var(--highlight-stroke) ${borderEnd}deg ${end}deg,
+          transparent ${end}deg 360deg
+        )
+      `;
+
+
+      highlightLayer.style.boxShadow = `
+        inset 0 0 40px rgba(255,255,255,0.14)
+      `;
+
+
+      highlightLayer.style.filter = `
+        drop-shadow(0 0 16px var(--highlight-glow))
+        drop-shadow(0 0 30px rgba(255, 200, 0, 0.55))
+      `;
+
+
+      highlightLayer.style.opacity = '1';
+    }
+
+
+    function createLabels() {
+      labelLayer.innerHTML = '';
+
+
+      const wheelSize = wheel.clientWidth;
+      const center = wheelSize / 2;
+      const radius = wheelSize * 0.41;
+
+
+      numbers.forEach((num, index) => {
+        const label = document.createElement('div');
+
+
+        const sliceStart = index * sliceAngle;
+        const labelAngleDeg = sliceStart + sliceAngle * 0.50;
+        const angleRad = (labelAngleDeg - 90) * Math.PI / 180;
+
+
+        const x = center + Math.cos(angleRad) * radius;
+        const y = center + Math.sin(angleRad) * radius;
+
+
+        label.className = 'num-label';
+        label.textContent = num;
+        label.style.left = `${x}px`;
+        label.style.top = `${y}px`;
+        label.style.transform = `translate(-50%, -50%) rotate(${labelAngleDeg}deg)`;
+
+
+        labelLayer.appendChild(label);
+      });
+    }
+
+
+    function createWheel() {
+      buildConicGradient();
+      createLabels();
+      clearHighlight();
+    }
+
+
+    function normalizeDeg(deg) {
+      return ((deg % 360) + 360) % 360;
+    }
+
+
+    function announce(text) {
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = text;
+      }, 60);
+    }
+
+
+    function getSecureRandomInt(max) {
+      const cryptoObj = window.crypto || window.msCrypto;
+      if (cryptoObj && cryptoObj.getRandomValues) {
+        const array = new Uint32Array(1);
+        cryptoObj.getRandomValues(array);
+        return array[0] % max;
+      }
+      return Math.floor(Math.random() * max);
+    }
+
+
+    function getRandomOffsetWithinSlice() {
+      const safeMargin = 3;
+      const span = sliceAngle - safeMargin * 2;
+      return safeMargin + Math.random() * span;
+    }
+
+
+    function getSliceIndexUnderPointer(rotationDeg) {
+      const pointerAngle = 90;
+      const localAngle = normalizeDeg(pointerAngle - normalizeDeg(rotationDeg));
+      return Math.floor(localAngle / sliceAngle) % numbers.length;
+    }
+
+
+    function getNumberUnderPointer(rotationDeg) {
+      return numbers[getSliceIndexUnderPointer(rotationDeg)];
+    }
+
+
+    function resetBuild() {
+      selectedDigits = [];
+      buildComplete = false;
+      selectedNumber.textContent = '-';
+      phoneNumber.textContent = '**------';
+      clearHighlight();
+      actionBtn.textContent = 'Эргүүлэх';
+      actionBtn.classList.remove('restart-btn');
+      actionBtn.classList.add('spin-btn');
+    }
+
+
+    function getMaskedPhoneDisplay() {
+      const suffix = selectedDigits.join('').padStart(6, '-');
+      return `**${suffix}`;
+    }
+
+
+    function finishBuild() {
+      buildComplete = true;
+      actionBtn.textContent = 'Дахин эхлүүлэх';
+      actionBtn.classList.remove('spin-btn');
+      actionBtn.classList.add('restart-btn');
+    }
+
+
+    function spinWheel() {
+      if (spinning || buildComplete) return;
+
+
+      spinning = true;
+      actionBtn.disabled = true;
+      clearHighlight();
+
+
+      const nextDigit = getSecureRandomInt(10);
+      const selectedIndex = numbers.indexOf(nextDigit);
+
+
+      const pointerAngle = 90;
+      const sliceStartAngle = selectedIndex * sliceAngle;
+      const randomAngleInsideSlice = sliceStartAngle + getRandomOffsetWithinSlice();
+      const targetAngle = normalizeDeg(pointerAngle - randomAngleInsideSlice);
+
+
+      const extraSpins = 5 + getSecureRandomInt(3);
+      const currentNormalized = normalizeDeg(currentRotation);
+
+
+      let delta = targetAngle - currentNormalized;
+      if (delta < 0) delta += 360;
+
+
+      const finalRotation = currentRotation + extraSpins * 360 + delta;
+
+
+      wheel.style.transform = `rotate(${finalRotation}deg)`;
+      currentRotation = finalRotation;
+
+
+      setTimeout(() => {
+        const actualSliceIndex = getSliceIndexUnderPointer(finalRotation);
+        const actualNumber = getNumberUnderPointer(finalRotation);
+
+
+        selectedDigits.unshift(String(actualNumber));
+        selectedNumber.textContent = actualNumber;
+        phoneNumber.textContent = getMaskedPhoneDisplay();
+        showHighlight(actualSliceIndex);
+
+
+        if (selectedDigits.length < 6) {
+          announce(`Сонгогдсон тоо ${actualNumber}`);
+        } else {
+          announce(`Сонгогдсон тоо ${actualNumber}. Утасны дугаар ${getMaskedPhoneDisplay()}`);
+          finishBuild();
+        }
+
+
+        actionBtn.disabled = false;
+        spinning = false;
+      }, 5900);
+    }
+
+
+    actionBtn.addEventListener('click', () => {
+      if (spinning) return;
+
+
+      if (buildComplete) {
+        resetBuild();
+        return;
+      }
+
+
+      spinWheel();
+    });
+
+
+    document.addEventListener('keydown', (event) => {
+      if ((event.code === 'Space' || event.code === 'Enter') && !spinning) {
+        event.preventDefault();
+
+
+        if (buildComplete) {
+          resetBuild();
+        } else {
+          spinWheel();
+        }
+      }
+    });
+
+
+    window.addEventListener('resize', createWheel);
+
+
+    createWheel();
+    resetBuild();
+  </script>
+</body>
+</html>
